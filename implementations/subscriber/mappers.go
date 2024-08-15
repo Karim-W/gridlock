@@ -14,12 +14,11 @@ func mapEvents(rows *sql.Rows) (res []gridlock.Event, err error) {
 
 	for rows.Next() {
 		err = rows.Scan(
-			&event.Id,
+			&event.ID,
 			&event.Origin,
 			&event.SequenceNumber,
 			&event.EntityType,
 			&event.EntityID,
-			&event.EntityVersion,
 			&event.EventType,
 			&headersByta,
 			&event.Body,

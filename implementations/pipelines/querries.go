@@ -1,4 +1,4 @@
-package publishers
+package pipelines
 
 const (
 	migrate_CHECK_IF_TABLE_EXISTS = `SELECT EXISTS (
@@ -9,7 +9,7 @@ const (
 	);`
 
 	migrate_CREATE_TABLE = `
-		CREATE TABLE event_snapshots (
+	CREATE TABLE event_snapshots (
 		id			  BIGSERIAL PRIMARY KEY,
 		origin         TEXT NOT NULL,
 		sequence_number BIGINT NOT NULL,
@@ -70,5 +70,22 @@ const (
 		$7,
 		$8
 	) RETURNING sequence_number;
+	`
+
+	query_INSERT_EVENT_BASE = `
+	INSERT INTO event_snapshots (
+		origin,
+		entity_type,
+		entity_id,
+		sequence_number,
+		event_type,
+		headers,
+		body,
+		created_at
+	) VALUES 
+	`
+
+	query_INSERT_RETURNING = `
+	RETURNING sequence_number;
 	`
 )

@@ -1,4 +1,4 @@
-package publishers
+package pipelines
 
 import (
 	"context"
@@ -9,13 +9,11 @@ import (
 	"github.com/karim-w/gridlock"
 )
 
-func (p *PublisherImpl) Publish(
+func (p *PipelineImpl[T]) One(
 	ctx context.Context,
-	entity_type string,
-	entity_id string,
 	event_type gridlock.EVENT_TYPE,
 	headers map[string]string,
-	body []byte,
+	body T,
 ) (seqNo uint64, err error) {
 	event_time := time.Now()
 
@@ -35,7 +33,7 @@ func (p *PublisherImpl) Publish(
 
 	// 3. get sequence number.
 	var sequence_number uint64
-	err = tx.QueryRowContext(ctx, query_get_entity_sequence_number, p.origin, entity_type).
+	err = tx.QueryRowContext(ctx, query_get_entity_sequence_number, p.origin, p.entity_type).
 		Scan(&sequence_number)
 	if err != nil && err != sql.ErrNoRows {
 		return
@@ -51,14 +49,23 @@ func (p *PublisherImpl) Publish(
 		headersByteA = []byte("{}")
 	}
 
+	bodyByteA, err := json.Marshal(body)
+	if err != nil {
+		return
+	}
+
+	if len(bodyByteA) == 0 {
+		bodyByteA = []byte("{}")
+	}
+
 	err = tx.QueryRowContext(ctx, query_INSERT_EVENT,
 		p.origin,
-		entity_type,
-		entity_id,
+		p.entity_type,
+		body.Id(),
 		sequence_number+1,
 		event_type,
 		headersByteA,
-		body,
+		bodyByteA,
 		event_time,
 	).Scan(&seqNo)
 	if err != nil {

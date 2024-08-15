@@ -11,14 +11,21 @@ const (
 )
 
 type Event struct {
-	Id             uint64            `json:"id"`
+	ID             uint64            `json:"id"`
 	Origin         string            `json:"origin"`
 	SequenceNumber uint64            `json:"sequence_number"`
 	EntityType     string            `json:"entity_type"`
 	EntityID       string            `json:"entity_id"`
-	EntityVersion  uint64            `json:"entity_version"`
 	EventType      EVENT_TYPE        `json:"event_type"`
 	Headers        map[string]string `json:"headers"`
 	Body           []byte            `json:"body"`
 	CreatedAt      time.Time         `json:"created_at"`
+}
+
+func (e Event) Id() uint64 {
+	return e.ID
+}
+
+type EventSpec interface {
+	Id() string
 }

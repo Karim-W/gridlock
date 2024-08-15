@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	gotest "github.com/karim-w/go-test"
+	"github.com/karim-w/gridlock"
 	"github.com/karim-w/stdlib/sqldb"
 )
 
@@ -28,7 +29,7 @@ func TestPublisherImpl_Publish(t *testing.T) {
 		ctx         context.Context
 		entity_type string
 		entity_id   string
-		event_type  string
+		event_type  gridlock.EVENT_TYPE
 		headers     map[string]string
 		body        []byte
 	}

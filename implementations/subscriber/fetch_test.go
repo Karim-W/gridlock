@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	go_test "github.com/karim-w/go-test"
+	"github.com/karim-w/gridlock"
 	"github.com/karim-w/gridlock/implementations/publishers"
 	"github.com/karim-w/gridlock/implementations/subscriber"
 	"github.com/karim-w/stdlib/sqldb"
@@ -19,7 +20,7 @@ func TestSubscriberImpl_Fetch(t *testing.T) {
 	type seed struct {
 		entity_type string
 		entity_id   string
-		event_type  string
+		event_type  gridlock.EVENT_TYPE
 		body        []byte
 	}
 

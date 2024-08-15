@@ -15,18 +15,20 @@ const (
 		sequence_number BIGINT NOT NULL,
 		entity_type     TEXT NOT NULL,
 		entity_id       TEXT NOT NULL,
-		entity_version  BIGINT NOT NULL,
 		event_type      TEXT NOT NULL,
 		headers         JSONB NOT NULL,
 		body            JSONB NOT NULL,
 		created_at      TIMESTAMPTZ NOT NULL,
-		UNIQUE (origin, entity_type, entity_id, entity_version)
+		UNIQUE (origin,event_type,sequence_number)
 	);
 
 	CREATE INDEX event_snapshots_entity_type ON event_snapshots USING HASH (entity_type);
 	CREATE INDEX event_snapshots_entity_id ON event_snapshots USING HASH (entity_id);
 	CREATE INDEX event_snapshots_origin ON event_snapshots USING HASH (origin);
 	CREATE INDEX event_snapshots_created_at ON event_snapshots USING BRIN (created_at);
+	CREATE INDEX event_snapshots_sequence_number ON event_snapshots USING BRIN (sequence_number);
+
+	CREATE INDEX idx_event_snapshots_origin_entity_sequence ON event_snapshots (origin, entity_type, sequence_number DESC);
 	`
 
 	query_SNAPSHOT_HISTORY = `
@@ -36,7 +38,6 @@ const (
 		sequence_number,
 		entity_type,
 		entity_id,
-		entity_version,
 		event_type,
 		headers,
 		body,
@@ -53,7 +54,6 @@ const (
 		sequence_number,
 		entity_type,
 		entity_id,
-		entity_version,
 		event_type,
 		headers,
 		body,
@@ -70,7 +70,6 @@ const (
 		sequence_number,
 		entity_type,
 		entity_id,
-		entity_version,
 		event_type,
 		headers,
 		body,
