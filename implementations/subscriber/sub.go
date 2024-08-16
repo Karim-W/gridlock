@@ -34,22 +34,44 @@ type Options struct {
 
 func New(
 	dsn string,
-	driver string,
-) gridlock.Subscriber {
+) (gridlock.Subscriber, error) {
+	db := sqldb.NewWithOptions("postgres", dsn, &sqldb.Options{
+		MaxIdleConns: 20,
+		MaxOpenConns: 20,
+		Name:         "GRIDLOCK_SUBSCRIBER",
+	})
+
+	err := automigrate(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return &SubscriberImpl{
 		ticker:  time.NewTicker(_DEFAULT_FREQUENCY),
 		channel: make(chan gridlock.Event, _DEFAULT_BUFFER_SIZE),
 		mu:      &sync.Mutex{},
-	}
+		db:      db,
+	}, nil
 }
 
 // NewWithOptions returns a new Subscriber with the given options.
-func NewWithOptions(opts Options) gridlock.Subscriber {
+func NewWithOptions(dsn string, opts Options) (gridlock.Subscriber, error) {
+	db := sqldb.NewWithOptions("postgres", dsn, &sqldb.Options{
+		MaxIdleConns: 20,
+		MaxOpenConns: 20,
+		Name:         "GRIDLOCK_SUBSCRIBER",
+	})
+
+	err := automigrate(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return &SubscriberImpl{
 		ticker:  time.NewTicker(opts.PullFrequency),
 		channel: make(chan gridlock.Event, opts.BufferSize),
 		mu:      &sync.Mutex{},
-	}
+	}, nil
 }
 
 // NewWithDB returns a new Subscriber with the given database.
