@@ -63,6 +63,25 @@ const (
 	ORDER BY created_at ASC;
 	`
 
+	query_ENTITY_SEQUENCES = `
+	SELECT
+		id,
+		origin,
+		sequence_number,
+		entity_type,
+		entity_id,
+		event_type,
+		headers,
+		body,
+		created_at
+	FROM event_snapshots
+	WHERE 
+		origin = $1 
+		AND entity_type = $2 
+		AND sequence_number = ANY($3)
+	ORDER BY sequence_number ASC;
+	`
+
 	query_subscribe = `
 	SELECT
 		id,

@@ -26,5 +26,11 @@ type Subscriber interface {
 		entity_type string,
 		entity_id string,
 	) ([]Event, error)
+	EntitySequences(
+		ctx context.Context,
+		orgin string,
+		entity_type string,
+		ids ...uint64,
+	) ([]Event, error)
 	Close()
 }
