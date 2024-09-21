@@ -233,3 +233,104 @@ func TestPipelineImpl_Many(t *testing.T) {
 		})
 	}
 }
+
+func TestPipelineImpl_OneMultiple(t *testing.T) {
+	db, cleanup := gotest.InitDockerPostgresSQLDBTest(t)
+	defer cleanup()
+
+	type fields struct {
+		db          sqldb.DB
+		origin      string
+		entity_type string
+	}
+	type args struct {
+		ctx        context.Context
+		event_type gridlock.EVENT_TYPE
+		headers    map[string]string
+		body       test
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		args         []args
+		wantErr      bool
+		should_exist bool
+	}{
+		{
+			name: "Test PipelineImpl.One",
+			fields: fields{
+				db:     db,
+				origin: "publisher_test",
+			},
+			args: []args{
+				{
+					ctx:        context.Background(),
+					event_type: gridlock.CREATED_EVENT,
+					headers: map[string]string{
+						"Content-Type": "application/json",
+					},
+					body: test{
+						ID:   uuid.NewString(),
+						Name: "John Doe",
+					},
+				}, {
+					ctx:        context.Background(),
+					event_type: gridlock.CREATED_EVENT,
+					headers: map[string]string{
+						"Content-Type": "application/json",
+					},
+					body: test{
+						ID:   uuid.NewString(),
+						Name: "John Doe",
+					},
+				},
+			},
+			wantErr:      false,
+			should_exist: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p, err := pipelines.NewWithDB[test](
+				tt.fields.db,
+				tt.fields.origin,
+				tt.fields.entity_type,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var seqNo uint64
+
+			for _, arg := range tt.args {
+
+				seqNo, err = p.One(
+					arg.ctx,
+					arg.event_type,
+					arg.headers,
+					arg.body,
+				)
+
+				log.Printf("seqNo: %d", seqNo)
+
+				if (err != nil) != tt.wantErr {
+					t.Errorf("PipelineImpl.One() error = %v, wantErr %v", err, tt.wantErr)
+				}
+
+				var seq uint64
+				err = db.QueryRow("SELECT sequence_number FROM event_snapshots WHERE origin = $1 AND entity_type = $2 AND entity_id = $3 AND event_type = $4",
+					tt.fields.origin, tt.fields.entity_type, arg.body.ID, arg.event_type).
+					Scan(&seq)
+				if err != nil {
+					if !(tt.should_exist && err == sql.ErrNoRows) {
+						t.Fatal(err)
+					}
+					return
+				}
+				if seq != seqNo {
+					t.Errorf("PipelineImpl.One sequence number mismatch = %v, want %v", seq, seqNo)
+				}
+			}
+		})
+	}
+}

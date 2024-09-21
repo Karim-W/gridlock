@@ -19,7 +19,7 @@ const (
 		headers         JSONB NOT NULL,
 		body            JSONB NOT NULL,
 		created_at      TIMESTAMPTZ NOT NULL,
-		UNIQUE (origin,event_type,sequence_number)
+		UNIQUE (origin,entity_type,sequence_number)
 	);
 
 	CREATE INDEX event_snapshots_entity_type ON event_snapshots USING HASH (entity_type);
